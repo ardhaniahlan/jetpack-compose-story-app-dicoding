@@ -15,6 +15,8 @@ import org.apps.composestoryapp.remote.SessionManager
 import org.apps.composestoryapp.remote.StoryApiService
 import org.apps.composestoryapp.repository.AuthRepository
 import org.apps.composestoryapp.repository.AuthRepositoryImpl
+import org.apps.composestoryapp.repository.StoryRepository
+import org.apps.composestoryapp.repository.StoryRepositoryImpl
 import javax.inject.Singleton
 
 @Module
@@ -45,4 +47,11 @@ object AppModule {
         sessionManager: SessionManager
     ): AuthRepository =
         AuthRepositoryImpl(apiService, sessionManager)
+
+    @Provides
+    @Singleton
+    fun provideStoryRepository(
+        apiService: StoryApiService
+    ): StoryRepository =
+        StoryRepositoryImpl(apiService)
 }

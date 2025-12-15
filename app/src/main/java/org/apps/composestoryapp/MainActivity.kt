@@ -3,29 +3,27 @@ package org.apps.composestoryapp
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeGestures
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import dagger.hilt.android.AndroidEntryPoint
 import org.apps.composestoryapp.presentation.auth.AuthGate
 import org.apps.composestoryapp.presentation.auth.LoginScreen
 import org.apps.composestoryapp.presentation.auth.RegisterScreen
 import org.apps.composestoryapp.presentation.home.HomeScreen
+import org.apps.composestoryapp.presentation.home.StoryDetailScreen
 import org.apps.composestoryapp.presentation.profile.ProfileScreen
 import org.apps.composestoryapp.remote.SessionManager
 import org.apps.composestoryapp.ui.theme.ComposeStoryAppTheme
@@ -92,6 +90,20 @@ class MainActivity : ComponentActivity() {
                         composable("profile"){
                             ProfileScreen(navController)
                         }
+
+                        composable(
+                            route = "storydetail/{storyId}",
+                            arguments = listOf(
+                                navArgument("storyId") { type = NavType.StringType }
+                            )
+                        ){ backStackEntry ->
+                            val storyId = backStackEntry.arguments?.getString("storyId") ?: ""
+                            StoryDetailScreen(
+                                storyId = storyId,
+                                onBackClick = { navController.popBackStack() }
+                            )
+                        }
+
                     }
                 }
             }

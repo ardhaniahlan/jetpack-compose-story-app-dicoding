@@ -1,6 +1,5 @@
 package org.apps.composestoryapp.remote
 
-import android.R.attr.level
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit

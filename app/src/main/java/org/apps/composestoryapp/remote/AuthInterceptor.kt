@@ -9,13 +9,15 @@ class AuthInterceptor(
     private val sessionManager: SessionManager
 ): Interceptor {
     override fun intercept(chain: Interceptor.Chain): Response {
-        val token = runBlocking {
+        val loginResult = runBlocking {
             sessionManager.sessionFlow.first()
         }
 
+        val token = loginResult?.token
+
         val request = chain.request().newBuilder()
             .apply {
-                if(!token?.token.isNullOrEmpty()){
+                if (!token.isNullOrEmpty()) {
                     addHeader("Authorization", "Bearer $token")
                 }
             }.build()
