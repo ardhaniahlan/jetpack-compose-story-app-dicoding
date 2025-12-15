@@ -1,0 +1,25 @@
+package org.apps.composestoryapp.remote
+
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.runBlocking
+import okhttp3.Interceptor
+import okhttp3.Response
+
+class AuthInterceptor(
+    private val sessionManager: SessionManager
+): Interceptor {
+    override fun intercept(chain: Interceptor.Chain): Response {
+        val token = runBlocking {
+            sessionManager.sessionFlow.first()
+        }
+
+        val request = chain.request().newBuilder()
+            .apply {
+                if(!token?.token.isNullOrEmpty()){
+                    addHeader("Authorization", "Bearer $token")
+                }
+            }.build()
+
+        return chain.proceed(request)
+    }
+}
