@@ -19,3 +19,8 @@ data class StoryDetailResponse(
     val message: String,
     val story: Story
 )
+
+data class AddStoryResponse(
+    val error: Boolean,
+    val message: String,
+)

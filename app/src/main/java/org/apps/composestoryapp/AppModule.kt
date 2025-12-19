@@ -51,7 +51,8 @@ object AppModule {
     @Provides
     @Singleton
     fun provideStoryRepository(
-        apiService: StoryApiService
+        apiService: StoryApiService,
+        @ApplicationContext context: Context
     ): StoryRepository =
-        StoryRepositoryImpl(apiService)
+        StoryRepositoryImpl(apiService, context)
 }

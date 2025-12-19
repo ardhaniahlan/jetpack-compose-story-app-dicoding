@@ -1,5 +1,6 @@
-package org.apps.composestoryapp.presentation.home
+package org.apps.composestoryapp.presentation.story
 
+import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -11,6 +12,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import org.apps.composestoryapp.UiEvent
 import org.apps.composestoryapp.ViewState
+import org.apps.composestoryapp.presentation.home.StoryState
 import org.apps.composestoryapp.repository.StoryRepository
 import javax.inject.Inject
 
@@ -23,6 +25,39 @@ class StoryViewModel @Inject constructor(
 
     private val _eventFlow = MutableSharedFlow<UiEvent>()
     val eventFlow = _eventFlow.asSharedFlow()
+
+    fun addStory() {
+
+        if (_uiState.value.description.isEmpty()){
+            _uiState.update { it.copy(addStoryState = ViewState.Error("Deskripsi tidak boleh kosong")) }
+            return
+        }
+
+        if (_uiState.value.photoFile == null){
+            _uiState.update { it.copy(addStoryState = ViewState.Error("Pilih gambar terlebih dahulu")) }
+            return
+        }
+
+        viewModelScope.launch {
+            _uiState.update { it.copy(addStoryState = ViewState.Loading) }
+
+            _uiState.value.photoFile?.let { uri ->
+                repository.addStory(_uiState.value.description, uri).onSuccess { response ->
+                    _uiState.update {
+                        it.copy(
+                            addStoryState = ViewState.Success(response),
+                            description = "",
+                            photoFile = null
+                        )
+                    }
+                }.onFailure { exception ->
+                    _uiState.update {
+                        it.copy(addStoryState = ViewState.Error(exception.message ?: "Unknown error"))
+                    }
+                }
+            }
+        }
+    }
 
     fun getAllStories(
         page: Int,
@@ -58,5 +93,17 @@ class StoryViewModel @Inject constructor(
                    }
                }
        }
+    }
+
+    fun onDescriptionChange(description: String) {
+        _uiState.update { it.copy(description = description) }
+    }
+
+    fun setImageUri(uri: Uri?) {
+        _uiState.update { it.copy(photoFile = uri) }
+    }
+
+    fun clearForm() {
+        _uiState.update { it.copy(description = "", photoFile = null) }
     }
 }
