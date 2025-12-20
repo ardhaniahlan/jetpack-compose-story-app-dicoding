@@ -7,7 +7,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Map
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -66,14 +66,14 @@ fun HomeScreen(
                     containerColor = MaterialTheme.colorScheme.primary,
                     titleContentColor = Color.White
                 ),
-                navigationIcon = {
+                actions = {
                     IconButton(
-                        onClick = { navController.navigate("addpost") }
+                        onClick = { navController.navigate("map") }
                     ) {
                         Icon(
-                            imageVector = Icons.Default.Add,
-                            contentDescription = "Back",
-                            tint = Color.Black
+                            imageVector = Icons.Default.Map,
+                            contentDescription = "map",
+                            tint = Color.White
                         )
                     }
                 }
@@ -122,9 +122,9 @@ fun HomeScreen(
                         ) {
                             items(stories){ story ->
                                 StoryItem(
-                                    story = story,
+                                    storyUi = story,
                                     onClick = {
-                                        navController.navigate("storydetail/${story.id}")
+                                        navController.navigate("storydetail/${story.story.id}")
                                     }
                                 )
                             }

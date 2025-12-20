@@ -34,12 +34,15 @@ interface StoryApiService {
     suspend fun addStory(
         @Part("description") description: RequestBody,
         @Part photo: MultipartBody.Part,
+        @Part("lat") lat: RequestBody? = null,
+        @Part("lon") lon: RequestBody? = null,
     ): AddStoryResponse
 
     @GET("stories")
     suspend fun getAllStories(
         @Query("page") page: Int,
-        @Query("size") size: Int
+        @Query("size") size: Int,
+        @Query("location") location: Int? = null
     ): StoryResponse
 
     @GET("stories/{id}")

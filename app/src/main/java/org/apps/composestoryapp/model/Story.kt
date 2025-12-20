@@ -1,5 +1,6 @@
 package org.apps.composestoryapp.model
 
+
 data class StoryResponse(
     val error: Boolean,
     val message: String,
@@ -11,6 +12,8 @@ data class Story(
     val name: String,
     val description: String,
     val photoUrl: String?,
+    val lat: Float,
+    val lon: Float,
     val createdAt: String
 )
 
@@ -24,3 +27,9 @@ data class AddStoryResponse(
     val error: Boolean,
     val message: String,
 )
+
+data class StoryUi(
+    val story: Story,
+    val locationName: String? = null
+)
+

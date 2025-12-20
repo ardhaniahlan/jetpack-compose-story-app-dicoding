@@ -21,9 +21,18 @@ import java.io.File
 import androidx.core.graphics.scale
 
 interface StoryRepository {
-    suspend fun getAllStories(page: Int = 1, size: Int = 10): Result<List<Story>>
+    suspend fun getAllStories(
+        page: Int = 1,
+        size: Int = 10,
+    ): Result<List<Story>>
+    suspend fun addStory(
+        description: String,
+        photoUri: Uri,
+        lat: Double?,
+        lon: Double?
+    ): Result<AddStoryResponse>
     suspend fun getStoryDetail(id: String): Result<Story>
-    suspend fun addStory(description: String, photoUri: Uri): Result<AddStoryResponse>
+    suspend fun getStoriesWithLocation(page: Int = 1, size: Int = 10,): Result<List<Story>>
 }
 
 class StoryRepositoryImpl(
@@ -37,7 +46,8 @@ class StoryRepositoryImpl(
         return try {
             val response = api.getAllStories(
                 page = page,
-                size = size
+                size = size,
+                location = null
             )
 
             if(!response.error){
@@ -64,6 +74,17 @@ class StoryRepositoryImpl(
         }
     }
 
+    override suspend fun getStoriesWithLocation(
+        page: Int,
+        size: Int,
+    ): Result<List<Story>> = runCatching {
+        api.getAllStories(
+            page = page,
+            size = size,
+            location = 1
+        ).listStory
+    }
+
     override suspend fun getStoryDetail(id: String): Result<Story> {
         return try{
             val response = api.getStoryDetail(
@@ -78,6 +99,8 @@ class StoryRepositoryImpl(
     override suspend fun addStory(
         description: String,
         photoUri: Uri,
+        lat: Double?,
+        lon: Double?,
     ): Result<AddStoryResponse> {
         return try {
             val photoFile = uriToFile(photoUri)
@@ -86,9 +109,14 @@ class StoryRepositoryImpl(
             val requestFile = photoFile.asRequestBody("image/*".toMediaType())
             val photoPart = MultipartBody.Part.createFormData("photo", photoFile.name, requestFile)
 
+            val latBody = lat?.toString()?.toRequestBody("text/plain".toMediaType())
+            val lonBody = lon?.toString()?.toRequestBody("text/plain".toMediaType())
+
             val response = api.addStory(
                 description = descriptionBody,
                 photo = photoPart,
+                lat = latBody,
+                lon = lonBody,
             )
 
             if (!response.error) {

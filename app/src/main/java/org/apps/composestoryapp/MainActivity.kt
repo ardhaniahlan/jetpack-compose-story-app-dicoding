@@ -26,6 +26,7 @@ import org.apps.composestoryapp.presentation.story.AddStoryScreen
 import org.apps.composestoryapp.presentation.home.HomeScreen
 import org.apps.composestoryapp.presentation.story.StoryDetailScreen
 import org.apps.composestoryapp.presentation.profile.ProfileScreen
+import org.apps.composestoryapp.presentation.story.MapScreen
 import org.apps.composestoryapp.remote.SessionManager
 import org.apps.composestoryapp.ui.theme.ComposeStoryAppTheme
 import javax.inject.Inject
@@ -88,6 +89,9 @@ class MainActivity : ComponentActivity() {
                         // App
                         composable("home"){
                             HomeScreen(navController)
+                        }
+                        composable("map") {
+                            MapScreen(navController)
                         }
                         composable("profile"){
                             ProfileScreen(navController)

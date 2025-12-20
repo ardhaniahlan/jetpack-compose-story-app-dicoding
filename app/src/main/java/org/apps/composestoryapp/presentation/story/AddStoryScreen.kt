@@ -31,6 +31,7 @@ import androidx.compose.material.icons.filled.Image
 import androidx.compose.material.icons.filled.PhotoCamera
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -63,6 +64,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import org.apps.composestoryapp.ViewState
+import org.apps.composestoryapp.getCurrentLocation
 import org.apps.composestoryapp.presentation.home.StoryState
 import org.apps.composestoryapp.ui.theme.ComposeStoryAppTheme
 import org.apps.composestoryapp.ui.theme.DarkGreenPrimary
@@ -119,6 +121,64 @@ fun AddStoryScreen(
         }
     }
 
+    val locationPermissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        if (isGranted) {
+            getCurrentLocation(
+                context = context,
+                onResult = { lat, lon ->
+                    storyViewModel.setLocation(lat, lon)
+                },
+                onError = {
+                    Toast.makeText(
+                        context,
+                        "Gagal mendapatkan lokasi",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
+            )
+        } else {
+            storyViewModel.setUseLocation(false)
+            Toast.makeText(
+                context,
+                "Lokasi tidak diizinkan",
+                Toast.LENGTH_SHORT
+            ).show()
+        }
+    }
+
+    val onUseLocationChange: (Boolean) -> Unit = { checked ->
+        storyViewModel.setUseLocation(checked)
+
+        if (checked) {
+            val permission = Manifest.permission.ACCESS_FINE_LOCATION
+            if (
+                ContextCompat.checkSelfPermission(
+                    context,
+                    permission
+                ) == PackageManager.PERMISSION_GRANTED
+            ) {
+                getCurrentLocation(
+                    context = context,
+                    onResult = { lat, lon ->
+                        storyViewModel.setLocation(lat, lon)
+                    },
+                    onError = {
+                        Toast.makeText(
+                            context,
+                            "Gagal mendapatkan lokasi",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
+                )
+
+            } else {
+                locationPermissionLauncher.launch(permission)
+            }
+        }
+    }
+
     LaunchedEffect(uiState.addStoryState) {
         when (uiState.addStoryState) {
             is ViewState.Success -> {
@@ -163,7 +223,8 @@ fun AddStoryScreen(
                     } else {
                         cameraPermissionLauncher.launch(permission)
                     }
-                }
+                },
+                onUseLocationChange = onUseLocationChange
             )
 
             val isActionLoading = uiState.addStoryState is ViewState.Loading
@@ -236,6 +297,7 @@ fun AddStoryContent(
     onDescriptionChange: (String) -> Unit,
     onPickImageClick: () -> Unit,
     onCameraClick: () -> Unit,
+    onUseLocationChange: (Boolean) -> Unit
 ){
 
     LazyColumn(
@@ -271,6 +333,17 @@ fun AddStoryContent(
             }
 
             Spacer(modifier = Modifier.height(30.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Checkbox(
+                    checked = uiState.useLocation,
+                    onCheckedChange = onUseLocationChange
+                )
+                Text("Sertakan lokasi saya")
+            }
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -346,7 +419,8 @@ fun AddStoryScreenPreview(){
             ),
             onDescriptionChange = {},
             onCameraClick = {},
-            onPickImageClick = {}
+            onPickImageClick = {},
+            onUseLocationChange = {}
         )
     }
 }

@@ -22,13 +22,16 @@ import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import org.apps.composestoryapp.formatDate
 import org.apps.composestoryapp.model.Story
+import org.apps.composestoryapp.model.StoryUi
 import org.apps.composestoryapp.ui.theme.ComposeStoryAppTheme
 
 @Composable
 fun StoryItem(
-    story: Story,
+    storyUi : StoryUi,
     onClick: () -> Unit
 ) {
+    val story = storyUi.story
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -48,6 +51,15 @@ fun StoryItem(
             fontSize = 12.sp,
             fontWeight = FontWeight.Normal,
         )
+
+        if (storyUi.locationName != null) {
+            Text(
+                text = "📍 ${storyUi.locationName}",
+                fontSize = 12.sp,
+                color = Color.Gray
+            )
+        }
+
 
         Spacer(modifier = Modifier.height(12.dp))
 
@@ -85,12 +97,16 @@ fun StoryItemPreview(){
     ComposeStoryAppTheme{
         Box(modifier = Modifier.padding(horizontal = 16.dp)) {
             StoryItem(
-                story = Story(
-                    id = "1asdd",
-                    name = "dhan",
-                    photoUrl = null,
-                    description = "LoremPsum",
-                    createdAt = "asdasda"
+                storyUi = StoryUi(
+                    story = Story(
+                        id = "1asdd",
+                        name = "dhan",
+                        photoUrl = null,
+                        description = "LoremPsum",
+                        createdAt = "asdasda",
+                        lat = 0F,
+                        lon = 0F
+                    ),
                 ),
                 onClick = {}
             )
