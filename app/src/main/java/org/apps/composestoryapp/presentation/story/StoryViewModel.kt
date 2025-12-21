@@ -12,24 +12,56 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import org.apps.composestoryapp.UiEvent
 import org.apps.composestoryapp.ViewState
+import org.apps.composestoryapp.model.Story
 import org.apps.composestoryapp.model.StoryUi
 import org.apps.composestoryapp.presentation.home.StoryState
 import org.apps.composestoryapp.repository.StoryRepository
 import org.apps.composestoryapp.reverseGeocode
+import org.apps.composestoryapp.room.StoryFavoriteRepository
+import org.apps.composestoryapp.room.toStoryUi
 import javax.inject.Inject
 
 @HiltViewModel
 class StoryViewModel @Inject constructor(
     private val repository: StoryRepository,
+    private val favoriteRepo: StoryFavoriteRepository,
     @ApplicationContext private val context: Context
 ) : ViewModel() {
+
+    // Room
+    val favorites: StateFlow<List<StoryUi>> = favoriteRepo.getFavorites()
+        .map { list -> list.map { it.toStoryUi() } }
+        .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
+
+    fun isFavorite(id: String): StateFlow<Boolean> =
+        favoriteRepo.isFavorite(id)
+            .stateIn(
+                viewModelScope,
+                SharingStarted.WhileSubscribed(5_000),
+                false
+            )
+
+    fun toggleFavorite(story: Story, isFavorite: Boolean) {
+        viewModelScope.launch {
+            if (isFavorite) {
+                favoriteRepo.removeFavorite(story)
+            } else {
+                favoriteRepo.toggleFavorite(story)
+            }
+        }
+    }
+
+    // API
     private val _uiState = MutableStateFlow(StoryState())
     val uiState = _uiState.asStateFlow()
 

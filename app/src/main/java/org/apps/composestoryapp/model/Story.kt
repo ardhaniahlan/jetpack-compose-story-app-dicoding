@@ -11,7 +11,7 @@ data class Story(
     val id: String,
     val name: String,
     val description: String,
-    val photoUrl: String?,
+    val photoUrl: String,
     val lat: Float,
     val lon: Float,
     val createdAt: String
@@ -32,4 +32,5 @@ data class StoryUi(
     val story: Story,
     val locationName: String? = null
 )
+
 

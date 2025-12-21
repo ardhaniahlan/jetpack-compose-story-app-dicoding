@@ -14,10 +14,12 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Newspaper
 import androidx.compose.material.icons.outlined.AccountCircle
 import androidx.compose.material.icons.outlined.Add
+import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.Newspaper
 import androidx.compose.material3.Icon
@@ -45,11 +47,13 @@ sealed class BottomNavItem(
     data object Home : BottomNavItem("home", "Home")
     data object Profile : BottomNavItem("profile", "Profile")
     data object AddStory : BottomNavItem("addstory", "Add")
+    data object Favorite : BottomNavItem("favorite", "Likes")
 }
 
 val bottomNavItems = listOf(
     BottomNavItem.Home,
     BottomNavItem.AddStory,
+    BottomNavItem.Favorite,
     BottomNavItem.Profile,
 )
 
@@ -146,6 +150,9 @@ fun getIconVariant(item: BottomNavItem, isSelected: Boolean): ImageVector {
         }
         BottomNavItem.AddStory -> {
             if (isSelected) Icons.Filled.Add else Icons.Outlined.Add
+        }
+        BottomNavItem.Favorite -> {
+            if (isSelected) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder
         }
     }
 }

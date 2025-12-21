@@ -2,6 +2,7 @@ package org.apps.composestoryapp.presentation.story
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -10,6 +11,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.IconButton
@@ -28,6 +31,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
@@ -44,6 +48,7 @@ fun StoryDetailScreen(
     onBackClick: () -> Unit = {},
 ) {
     val uiState by storyViewModel.uiState.collectAsState()
+    val isLiked by storyViewModel.isFavorite(storyId).collectAsState(initial = false)
 
     LaunchedEffect(storyId) {
         storyViewModel.getStoryDetail(storyId)
@@ -105,7 +110,11 @@ fun StoryDetailScreen(
 
                     StoryDetailContent(
                         story = storyUi.story,
-                        locationName = storyUi.locationName
+                        locationName = storyUi.locationName,
+                        isLiked = isLiked,
+                        onToggleFavorite = {
+                            storyViewModel.toggleFavorite(storyUi.story, isLiked)
+                        }
                     )
                 }
                 else -> Unit
@@ -117,7 +126,9 @@ fun StoryDetailScreen(
 @Composable
 fun StoryDetailContent(
     story: Story,
-    locationName: String? = null
+    locationName: String? = null,
+    isLiked: Boolean,
+    onToggleFavorite: () -> Unit
 ){
     LazyColumn(
         modifier = Modifier
@@ -149,21 +160,38 @@ fun StoryDetailContent(
         item {
             Spacer(modifier = Modifier.height(12.dp))
 
-            Text(
-                text = story.name,
-                fontSize = 14.sp,
-                fontWeight = FontWeight.Bold,
-                maxLines = 2,
-                modifier = Modifier.padding(horizontal = 16.dp)
-            )
+            Row(modifier = Modifier.fillMaxWidth()) {
+                Column(
+                    modifier = Modifier.fillMaxSize()
+                        .padding(horizontal = 16.dp).weight(1f)
+                ) {
+                    Text(
+                        text = story.name,
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Bold,
+                        maxLines = 2,
+                    )
 
-            Text(
-                text = formatDate(story.createdAt),
-                fontSize = 12.sp,
-                fontWeight = FontWeight.Normal,
-                modifier = Modifier.padding(horizontal = 16.dp)
+                    Text(
+                        text = formatDate(story.createdAt),
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Normal,
+                    )
+                }
 
-            )
+                IconButton(
+                    onClick = onToggleFavorite
+                ) {
+                    Icon(
+                        imageVector = if (isLiked)
+                            Icons.Filled.Favorite
+                        else
+                            Icons.Outlined.FavoriteBorder,
+                        contentDescription = "Like",
+                        tint = if (isLiked) Color.Red else Color.Gray
+                    )
+                }
+            }
         }
 
         item {
@@ -176,5 +204,30 @@ fun StoryDetailContent(
                 modifier = Modifier.padding(horizontal = 16.dp)
             )
         }
+    }
+}
+
+
+@Preview(showBackground = true, showSystemUi = true)
+@Composable
+fun StoryDetailPreview_Success() {
+    // Data Dummy
+    val dummyStory = Story(
+        id = "1",
+        name = "John Doe",
+        description = "Ini adalah deskripsi cerita yang sangat menarik tentang perjalanan ke pegunungan.",
+        photoUrl = "https://example.com/photo.jpg",
+        createdAt = "2023-10-27T10:00:00Z",
+        lat = -6.2F,
+        lon = 106.8F
+    )
+
+    MaterialTheme {
+        StoryDetailContent(
+            story = dummyStory,
+            locationName = "Jakarta, Indonesia",
+            isLiked = true,
+            onToggleFavorite = {}
+        )
     }
 }

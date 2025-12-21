@@ -22,6 +22,7 @@ import dagger.hilt.android.AndroidEntryPoint
 import org.apps.composestoryapp.presentation.auth.AuthGate
 import org.apps.composestoryapp.presentation.auth.LoginScreen
 import org.apps.composestoryapp.presentation.auth.RegisterScreen
+import org.apps.composestoryapp.presentation.favorite.FavoriteScreen
 import org.apps.composestoryapp.presentation.story.AddStoryScreen
 import org.apps.composestoryapp.presentation.home.HomeScreen
 import org.apps.composestoryapp.presentation.story.StoryDetailScreen
@@ -49,7 +50,8 @@ class MainActivity : ComponentActivity() {
             val showBottomNav = currentRoute in listOf(
                 BottomNavItem.Home.route,
                 BottomNavItem.Profile.route,
-                BottomNavItem.AddStory.route
+                BottomNavItem.AddStory.route,
+                BottomNavItem.Favorite.route,
             )
 
             ComposeStoryAppTheme {
@@ -95,6 +97,9 @@ class MainActivity : ComponentActivity() {
                         }
                         composable("profile"){
                             ProfileScreen(navController)
+                        }
+                        composable("favorite"){
+                            FavoriteScreen(navController)
                         }
                         composable("addstory"){
                             AddStoryScreen(navController)
