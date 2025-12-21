@@ -4,17 +4,14 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.net.Uri
-import android.util.Log
 import androidx.datastore.core.IOException
 import dagger.hilt.android.qualifiers.ApplicationContext
-import kotlinx.coroutines.flow.first
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.MultipartBody
 import okhttp3.RequestBody.Companion.asRequestBody
 import okhttp3.RequestBody.Companion.toRequestBody
 import org.apps.composestoryapp.model.AddStoryResponse
 import org.apps.composestoryapp.model.Story
-import org.apps.composestoryapp.remote.SessionManager
 import org.apps.composestoryapp.remote.StoryApiService
 import retrofit2.HttpException
 import java.io.File

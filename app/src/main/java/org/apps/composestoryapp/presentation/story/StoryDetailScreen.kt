@@ -101,8 +101,12 @@ fun StoryDetailScreen(
                 }
 
                 is ViewState.Success -> {
-                    val story = state.data
-                    StoryDetailContent(story = story)
+                    val storyUi = state.data
+
+                    StoryDetailContent(
+                        story = storyUi.story,
+                        locationName = storyUi.locationName
+                    )
                 }
                 else -> Unit
             }
@@ -113,6 +117,7 @@ fun StoryDetailScreen(
 @Composable
 fun StoryDetailContent(
     story: Story,
+    locationName: String? = null
 ){
     LazyColumn(
         modifier = Modifier
@@ -127,6 +132,18 @@ fun StoryDetailContent(
                     .height(200.dp),
                 contentScale = ContentScale.Fit
             )
+        }
+
+        item {
+            if (locationName != null) {
+                Text(
+                    text = "📍 $locationName",
+                    fontSize = 12.sp,
+                    color = Color.Gray,
+                    modifier = Modifier.padding(horizontal = 16.dp),
+                    maxLines = 2
+                )
+            }
         }
 
         item {

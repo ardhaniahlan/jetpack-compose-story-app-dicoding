@@ -49,12 +49,14 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.navigation.NavController
 import org.apps.composestoryapp.UiEvent
 import org.apps.composestoryapp.ViewState
+import org.apps.composestoryapp.ui.theme.DarkGreenPrimary
 import org.apps.composestoryapp.ui.theme.GreenTertiary
 import org.apps.composestoryapp.ui.theme.GreyLight
 
@@ -195,6 +197,17 @@ fun LoginContent(
                 .padding(start = 20.dp, top = 30.dp, end = 20.dp, bottom = 30.dp)
                 .weight(1f),
         ) {
+
+            Text(
+                text = "Login",
+                fontSize = 22.sp,
+                color = DarkGreenPrimary,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.fillMaxWidth(),
+                textAlign = TextAlign.Center
+            )
+
+            Spacer(modifier = Modifier.height(15.dp))
 
             TextField(
                 value = uiState.email,

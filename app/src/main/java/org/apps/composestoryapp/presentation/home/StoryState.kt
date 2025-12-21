@@ -16,6 +16,6 @@ data class StoryState(
 
     val storyListState: ViewState<List<StoryUi>> = ViewState.Idle,
     val mapState: ViewState<List<Story>> = ViewState.Idle,
-    val storyState: ViewState<Story> = ViewState.Idle,
+    val storyState: ViewState<StoryUi> = ViewState.Idle,
     val addStoryState: ViewState<AddStoryResponse> = ViewState.Idle,
 )

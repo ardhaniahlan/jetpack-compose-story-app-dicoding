@@ -99,7 +99,6 @@ class MainActivity : ComponentActivity() {
                         composable("addstory"){
                             AddStoryScreen(navController)
                         }
-
                         composable(
                             route = "storydetail/{storyId}",
                             arguments = listOf(
@@ -112,7 +111,6 @@ class MainActivity : ComponentActivity() {
                                 onBackClick = { navController.popBackStack() }
                             )
                         }
-
                     }
                 }
             }

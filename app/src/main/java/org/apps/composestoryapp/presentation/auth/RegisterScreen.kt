@@ -14,7 +14,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
@@ -29,7 +28,6 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
@@ -52,14 +50,15 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.navigation.NavController
-import org.apps.composestoryapp.UiEvent
 import org.apps.composestoryapp.ViewState
 import org.apps.composestoryapp.ui.theme.ComposeStoryAppTheme
+import org.apps.composestoryapp.ui.theme.DarkGreenPrimary
 import org.apps.composestoryapp.ui.theme.GreenTertiary
 import org.apps.composestoryapp.ui.theme.GreyLight
 
@@ -196,6 +195,18 @@ fun RegisterContent(
                 .padding(start = 20.dp, top = 30.dp, end = 20.dp, bottom = 30.dp)
                 .weight(1f),
         ) {
+
+            Text(
+                text = "Register",
+                fontSize = 22.sp,
+                fontWeight = FontWeight.Bold,
+                color = DarkGreenPrimary,
+                modifier = Modifier.fillMaxWidth(),
+                textAlign = TextAlign.Center
+            )
+
+            Spacer(modifier = Modifier.height(15.dp))
+
             TextField(
                 value = uiState.name,
                 onValueChange = onNameChange,

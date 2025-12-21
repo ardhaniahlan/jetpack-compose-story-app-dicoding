@@ -108,47 +108,6 @@ class StoryViewModel @Inject constructor(
         }
     }
 
-    private fun resolveLocations(stories: List<StoryUi>) {
-        stories.forEach { storyUi ->
-            val lat = storyUi.story.lat
-            val lon = storyUi.story.lon
-            val key = "$lat,$lon"
-
-            if (locationCache.containsKey(key)) {
-                updateStoryLocation(storyUi.story.id, locationCache[key])
-            } else {
-                reverseGeocode(
-                    context = context,
-                    lat = lat.toDouble(),
-                    lon = lon.toDouble(),
-                    onResult = { location ->
-                        locationCache[key] = location
-                        updateStoryLocation(storyUi.story.id, location)
-                    },
-                    onError = {}
-                )
-            }
-        }
-    }
-
-    private fun updateStoryLocation(storyId: String, location: String?) {
-        val current =
-            (_uiState.value.storyListState as? ViewState.Success)?.data ?: return
-
-        _uiState.update {
-            it.copy(
-                storyListState = ViewState.Success(
-                    current.map { ui ->
-                        if (ui.story.id == storyId)
-                            ui.copy(locationName = location)
-                        else ui
-                    }
-                )
-            )
-        }
-    }
-
-
     fun getAllStories(
         page: Int,
         size: Int,
@@ -175,20 +134,100 @@ class StoryViewModel @Inject constructor(
     }
 
     fun getStoryDetail(id: String){
-       viewModelScope.launch {
-           _uiState.update { it.copy(storyState = ViewState.Loading)}
+        viewModelScope.launch {
+            _uiState.update { it.copy(storyState = ViewState.Loading)}
 
-           repository.getStoryDetail(id)
-               .onSuccess { story ->
-                   _uiState.update { it.copy(storyState = ViewState.Success(story)) }
-                   _eventFlow.emit(UiEvent.NavigateStoryDetail(id))
-               }
-               .onFailure { error ->
-                   _uiState.update {
-                       it.copy(storyState = ViewState.Error(error.message ?: "Terjadi Kesalahan"))
-                   }
-               }
-       }
+            repository.getStoryDetail(id)
+                .onSuccess { story ->
+                    val storyUi = StoryUi(story = story)
+                    _uiState.update { it.copy(storyState = ViewState.Success(storyUi)) }
+
+                    resolveLocationForDetail(storyUi)
+
+                    _eventFlow.emit(UiEvent.NavigateStoryDetail(id))
+                }
+                .onFailure { error ->
+                    _uiState.update {
+                        it.copy(storyState = ViewState.Error(error.message ?: "Terjadi Kesalahan"))
+                    }
+                }
+        }
+    }
+
+    private fun resolveLocation(
+        lat: Double?,
+        lon: Double?,
+        onLocationResolved: (String) -> Unit
+    ) {
+        if (lat == null || lon == null) return
+        val key = "$lat,$lon"
+
+        locationCache[key]?.let { cached ->
+            onLocationResolved(cached)
+            return
+        }
+
+        reverseGeocode(
+            context = context,
+            lat = lat,
+            lon = lon,
+            onResult = { location ->
+                locationCache[key] = location
+                onLocationResolved(location)
+            },
+            onError = {}
+        )
+    }
+
+    private fun resolveLocations(stories: List<StoryUi>) {
+        stories.forEach { storyUi ->
+            resolveLocation(
+                lat = storyUi.story.lat.toDouble(),
+                lon = storyUi.story.lon.toDouble()
+            ) { location ->
+                updateStoryLocation(storyUi.story.id, location)
+            }
+        }
+    }
+
+    private fun resolveLocationForDetail(storyUi: StoryUi) {
+        resolveLocation(
+            lat = storyUi.story.lat.toDouble(),
+            lon = storyUi.story.lon.toDouble()
+        ) { location ->
+            updateDetailLocation(location)
+        }
+    }
+
+    private fun updateDetailLocation(location: String) {
+        val current =
+            (_uiState.value.storyState as? ViewState.Success)?.data
+                ?: return
+
+        _uiState.update {
+            it.copy(
+                storyState = ViewState.Success(
+                    current.copy(locationName = location)
+                )
+            )
+        }
+    }
+
+    private fun updateStoryLocation(storyId: String, location: String?) {
+        val current =
+            (_uiState.value.storyListState as? ViewState.Success)?.data ?: return
+
+        _uiState.update {
+            it.copy(
+                storyListState = ViewState.Success(
+                    current.map { ui ->
+                        if (ui.story.id == storyId)
+                            ui.copy(locationName = location)
+                        else ui
+                    }
+                )
+            )
+        }
     }
 
     fun onDescriptionChange(description: String) {
