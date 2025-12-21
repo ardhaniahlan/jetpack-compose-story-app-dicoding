@@ -29,7 +29,6 @@ Aplikasi ini dibangun menggunakan **API resmi Dicoding Story API** dan menerapka
   - Mengambil lokasi pengguna (latitude & longitude)
   - Menampilkan **nama lokasi hasil reverse geocoding**
   - Menampilkan lokasi story di **Google Maps**
-  - Story tanpa lokasi **tetap dapat ditampilkan**
 
 - 🗺️ **Map**
   - Menampilkan semua story yang memiliki lokasi
