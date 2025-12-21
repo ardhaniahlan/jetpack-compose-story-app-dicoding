@@ -16,12 +16,13 @@ import org.apps.composestoryapp.remote.StoryApiService
 import retrofit2.HttpException
 import java.io.File
 import androidx.core.graphics.scale
+import androidx.paging.Pager
+import androidx.paging.PagingConfig
+import androidx.paging.PagingData
+import kotlinx.coroutines.flow.Flow
 
 interface StoryRepository {
-    suspend fun getAllStories(
-        page: Int = 1,
-        size: Int = 10,
-    ): Result<List<Story>>
+    fun getAllStories(): Flow<PagingData<Story>>
     suspend fun addStory(
         description: String,
         photoUri: Uri,
@@ -36,39 +37,18 @@ class StoryRepositoryImpl(
     private val api: StoryApiService,
     @ApplicationContext private val context: Context,
 ): StoryRepository{
-    override suspend fun getAllStories(
-        page: Int,
-        size: Int,
-    ): Result<List<Story>> {
-        return try {
-            val response = api.getAllStories(
-                page = page,
-                size = size,
-                location = null
-            )
 
-            if(!response.error){
-                Result.success(response.listStory)
-            } else {
-                Result.failure(Exception(response.message))
+    override fun getAllStories(): Flow<PagingData<Story>> {
+        return Pager(
+            config = PagingConfig(
+                pageSize = 10,
+                initialLoadSize = 10,
+                enablePlaceholders = false
+            ),
+            pagingSourceFactory = {
+                StoryPagingSource(api)
             }
-        } catch (e: Exception) {
-            val errorMessage = when (e) {
-                is HttpException -> {
-                    when (e.code()) {
-                        400 -> "Bad Request - Cek parameter"
-                        401 -> "Unauthorized - Token expired"
-                        404 -> "Stories not found"
-                        500 -> "Server error"
-                        else -> "Error (${e.code()})"
-                    }
-                }
-
-                is IOException -> "No internet connection"
-                else -> e.message ?: "Failed to fetch stories"
-            }
-            Result.failure(Exception(errorMessage))
-        }
+        ).flow
     }
 
     override suspend fun getStoriesWithLocation(

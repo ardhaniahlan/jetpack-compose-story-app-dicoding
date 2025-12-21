@@ -2,7 +2,6 @@ package org.apps.composestoryapp.presentation.home
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -11,26 +10,39 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import org.apps.composestoryapp.formatDate
-import org.apps.composestoryapp.model.Story
 import org.apps.composestoryapp.model.StoryUi
-import org.apps.composestoryapp.ui.theme.ComposeStoryAppTheme
+import org.apps.composestoryapp.presentation.story.StoryViewModel
 
 @Composable
 fun StoryItem(
     storyUi : StoryUi,
+    storyViewModel: StoryViewModel,
     onClick: () -> Unit
 ) {
     val story = storyUi.story
+    var locationName by remember { mutableStateOf<String?>(null) }
+
+    LaunchedEffect(storyUi.story.id) {
+        val lat = storyUi.story.lat
+        val lon = storyUi.story.lon
+        storyViewModel.resolveLocation(lat.toDouble(), lon.toDouble()) {
+            locationName = it
+        }
+    }
 
     Column(
         modifier = Modifier
@@ -52,9 +64,9 @@ fun StoryItem(
             fontWeight = FontWeight.Normal,
         )
 
-        if (storyUi.locationName != null) {
+        if (locationName != null) {
             Text(
-                text = "📍 ${storyUi.locationName}",
+                text = "📍$locationName",
                 fontSize = 12.sp,
                 color = Color.Gray
             )
@@ -91,25 +103,26 @@ fun StoryItem(
     }
 }
 
-@Preview(showBackground = true)
-@Composable
-fun StoryItemPreview(){
-    ComposeStoryAppTheme{
-        Box(modifier = Modifier.padding(horizontal = 16.dp)) {
-            StoryItem(
-                storyUi = StoryUi(
-                    story = Story(
-                        id = "1asdd",
-                        name = "dhan",
-                        photoUrl = null,
-                        description = "LoremPsum",
-                        createdAt = "asdasda",
-                        lat = 0F,
-                        lon = 0F
-                    ),
-                ),
-                onClick = {}
-            )
-        }
-    }
-}
+//@Preview(showBackground = true)
+//@Composable
+//fun StoryItemPreview(){
+//    ComposeStoryAppTheme{
+//        Box(modifier = Modifier.padding(horizontal = 16.dp)) {
+//            StoryItem(
+//                storyUi = StoryUi(
+//                    story = Story(
+//                        id = "1asdd",
+//                        name = "dhan",
+//                        photoUrl = null,
+//                        description = "LoremPsum",
+//                        createdAt = "asdasda",
+//                        lat = 0F,
+//                        lon = 0F
+//                    ),
+//                ),
+//                onClick = {},
+//                storyViewModel =
+//            )
+//        }
+//    }
+//}

@@ -1,11 +1,10 @@
 package org.apps.composestoryapp.presentation.home
 
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Map
 import androidx.compose.material3.CircularProgressIndicator
@@ -19,16 +18,17 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.navigation.NavController
+import androidx.paging.LoadState
+import androidx.paging.compose.collectAsLazyPagingItems
 import org.apps.composestoryapp.UiEvent
-import org.apps.composestoryapp.ViewState
 import org.apps.composestoryapp.presentation.story.StoryViewModel
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -36,12 +36,11 @@ fun HomeScreen(
     navController: NavController,
     storyViewModel: StoryViewModel = hiltViewModel()
 ){
-    val uiState by storyViewModel.uiState.collectAsState()
+    val stories = storyViewModel.stories.collectAsLazyPagingItems()
+    val lazyListState = rememberLazyListState()
 
     LaunchedEffect(Unit) {
-        storyViewModel.getAllStories(
-            page = 1, size = 10
-        )
+        stories.refresh()
 
         storyViewModel.eventFlow.collect { story ->
             when(story){
@@ -50,6 +49,12 @@ fun HomeScreen(
                 }
                 else -> Unit
             }
+        }
+    }
+
+    LaunchedEffect(stories.itemCount) {
+        if (stories.itemCount > 0) {
+            lazyListState.animateScrollToItem(0)
         }
     }
 
@@ -81,59 +86,59 @@ fun HomeScreen(
         }
     ) { innerPadding ->
 
-        Column(
+        LazyColumn(
+            state = lazyListState,
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
         ) {
-            when(val state = uiState.storyListState){
-                is ViewState.Loading -> {
-                    Box(
-                        modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        CircularProgressIndicator()
-                    }
-                }
-                is ViewState.Error -> {
-                    Box(
-                        modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = state.message,
-                            color = MaterialTheme.colorScheme.error
-                        )
-                    }
-                }
-                is ViewState.Success -> {
-                    val stories = state.data
-
-                    if (stories.isEmpty()){
-                        Box(
-                            modifier = Modifier.fillMaxSize(),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text("No story found")
+            items(
+                count = stories.itemCount,
+                key = { i -> stories[i]?.story?.id ?: i }
+            ) { i ->
+                stories[i]?.let { storyUi ->
+                    StoryItem(
+                        storyUi = storyUi,
+                        storyViewModel = storyViewModel,
+                        onClick = {
+                            navController.navigate("storydetail/${storyUi.story.id}")
                         }
-                    } else {
-                        LazyColumn(
-                            modifier = Modifier.fillMaxSize()
-                        ) {
-                            items(stories){ story ->
-                                StoryItem(
-                                    storyUi = story,
-                                    onClick = {
-                                        navController.navigate("storydetail/${story.story.id}")
-                                    }
-                                )
+                    )
+                }
+            }
+
+            stories.apply {
+                when {
+                    loadState.refresh is LoadState.Loading -> {
+                        item {
+                            Box(
+                                modifier = Modifier.fillParentMaxSize(),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                CircularProgressIndicator()
                             }
                         }
                     }
+
+                    loadState.append is LoadState.Loading -> {
+                        item {
+                            CircularProgressIndicator(
+                                modifier = Modifier.padding(16.dp)
+                            )
+                        }
+                    }
+
+                    loadState.refresh is LoadState.Error -> {
+                        val e = loadState.refresh as LoadState.Error
+                        item {
+                            Text(
+                                text = e.error.message ?: "Error",
+                                color = MaterialTheme.colorScheme.error
+                            )
+                        }
+                    }
                 }
-                else -> Unit
             }
         }
-
     }
 }

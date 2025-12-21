@@ -4,12 +4,17 @@ import android.content.Context
 import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.paging.PagingData
+import androidx.paging.cachedIn
+import androidx.paging.map
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import org.apps.composestoryapp.UiEvent
@@ -32,6 +37,15 @@ class StoryViewModel @Inject constructor(
     val eventFlow = _eventFlow.asSharedFlow()
 
     private val locationCache = mutableMapOf<String, String>()
+
+    val stories: Flow<PagingData<StoryUi>> =
+        repository.getAllStories()
+            .map { pagingData ->
+                pagingData.map { story ->
+                    StoryUi(story)
+                }
+            }
+            .cachedIn(viewModelScope)
 
     fun addStory() {
         if (_uiState.value.description.isEmpty()){
@@ -108,31 +122,6 @@ class StoryViewModel @Inject constructor(
         }
     }
 
-    fun getAllStories(
-        page: Int,
-        size: Int,
-    ){
-        viewModelScope.launch {
-            _uiState.update { it.copy(storyListState = ViewState.Loading)}
-
-            repository.getAllStories(page, size)
-                .onSuccess { storyList ->
-                    val storyUiList = storyList.map {
-                        StoryUi(story = it)
-                    }
-
-                    _uiState.update { it.copy(storyListState = ViewState.Success(storyUiList)) }
-
-                    resolveLocations(storyUiList)
-                }
-                .onFailure { error ->
-                    _uiState.update {
-                        it.copy(storyListState = ViewState.Error(error.message ?: "Terjadi Kesalahan"))
-                    }
-                }
-        }
-    }
-
     fun getStoryDetail(id: String){
         viewModelScope.launch {
             _uiState.update { it.copy(storyState = ViewState.Loading)}
@@ -154,7 +143,7 @@ class StoryViewModel @Inject constructor(
         }
     }
 
-    private fun resolveLocation(
+    fun resolveLocation(
         lat: Double?,
         lon: Double?,
         onLocationResolved: (String) -> Unit
@@ -177,17 +166,6 @@ class StoryViewModel @Inject constructor(
             },
             onError = {}
         )
-    }
-
-    private fun resolveLocations(stories: List<StoryUi>) {
-        stories.forEach { storyUi ->
-            resolveLocation(
-                lat = storyUi.story.lat.toDouble(),
-                lon = storyUi.story.lon.toDouble()
-            ) { location ->
-                updateStoryLocation(storyUi.story.id, location)
-            }
-        }
     }
 
     private fun resolveLocationForDetail(storyUi: StoryUi) {

@@ -1,3 +1,4 @@
+import org.gradle.kotlin.dsl.implementation
 import java.io.FileInputStream
 import java.util.Properties
 
@@ -100,4 +101,7 @@ dependencies {
     implementation("com.google.android.gms:play-services-location:21.3.0")
     implementation("com.google.maps.android:maps-compose:7.0.0")
 
+    // Pagging
+    implementation("androidx.paging:paging-runtime:3.3.6")
+    implementation("androidx.paging:paging-compose:3.3.6")
 }
