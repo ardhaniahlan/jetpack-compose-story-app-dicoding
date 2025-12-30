@@ -1,16 +1,22 @@
 package org.apps.composestoryapp.presentation.story
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material3.CircularProgressIndicator
@@ -29,13 +35,17 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import coil.compose.AsyncImage
+import coil.request.ImageRequest
 import org.apps.composestoryapp.ViewState
 import org.apps.composestoryapp.formatDate
 import org.apps.composestoryapp.model.Story
@@ -114,6 +124,9 @@ fun StoryDetailScreen(
                         isLiked = isLiked,
                         onToggleFavorite = {
                             storyViewModel.toggleFavorite(storyUi.story, isLiked)
+                        },
+                        onImageClick = { imageUrl ->
+                            storyViewModel.showImagePreview(imageUrl)
                         }
                     )
                 }
@@ -121,6 +134,11 @@ fun StoryDetailScreen(
             }
         }
     }
+
+    ImagePreviewDialog(
+        imageUrl = uiState.imagePreview.imageUrl,
+        onDismiss = { storyViewModel.hideImagePreview() }
+    )
 }
 
 @Composable
@@ -128,7 +146,8 @@ fun StoryDetailContent(
     story: Story,
     locationName: String? = null,
     isLiked: Boolean,
-    onToggleFavorite: () -> Unit
+    onToggleFavorite: () -> Unit,
+    onImageClick: (String) -> Unit
 ){
     LazyColumn(
         modifier = Modifier
@@ -140,7 +159,10 @@ fun StoryDetailContent(
                 contentDescription = story.name,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(200.dp),
+                    .height(200.dp)
+                    .clickable {
+                        onImageClick(story.photoUrl)
+                    },
                 contentScale = ContentScale.Fit
             )
         }
@@ -207,27 +229,87 @@ fun StoryDetailContent(
     }
 }
 
-
-@Preview(showBackground = true, showSystemUi = true)
 @Composable
-fun StoryDetailPreview_Success() {
-    // Data Dummy
-    val dummyStory = Story(
-        id = "1",
-        name = "John Doe",
-        description = "Ini adalah deskripsi cerita yang sangat menarik tentang perjalanan ke pegunungan.",
-        photoUrl = "https://example.com/photo.jpg",
-        createdAt = "2023-10-27T10:00:00Z",
-        lat = -6.2F,
-        lon = 106.8F
-    )
+fun ImagePreviewDialog(
+    imageUrl: String?,
+    onDismiss: () -> Unit
+) {
+    if (imageUrl != null) {
+        Dialog(
+            onDismissRequest = onDismiss,
+            properties = DialogProperties(
+                dismissOnBackPress = true,
+                dismissOnClickOutside = true,
+                usePlatformDefaultWidth = false
+            )
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color.Black.copy(alpha = 0.9f)),
+                contentAlignment = Alignment.Center
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth(0.95f)
+                        .fillMaxHeight(0.95f),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    // Close button
+                    Box(
+                        modifier = Modifier.fillMaxWidth(),
+                        contentAlignment = Alignment.TopEnd
+                    ) {
+                        IconButton(onClick = onDismiss) {
+                            Icon(
+                                imageVector = Icons.Default.Close,
+                                contentDescription = "Close",
+                                tint = Color.White,
+                                modifier = Modifier.size(32.dp)
+                            )
+                        }
+                    }
 
-    MaterialTheme {
-        StoryDetailContent(
-            story = dummyStory,
-            locationName = "Jakarta, Indonesia",
-            isLiked = true,
-            onToggleFavorite = {}
-        )
+                    // Image
+                    AsyncImage(
+                        model = ImageRequest.Builder(LocalContext.current)
+                            .data(imageUrl)
+                            .crossfade(true)
+                            .build(),
+                        contentDescription = "Preview",
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .fillMaxHeight(0.85f),
+                        contentScale = ContentScale.Fit
+                    )
+                }
+            }
+        }
     }
 }
+
+
+//@Preview(showBackground = true, showSystemUi = true)
+//@Composable
+//fun StoryDetailPreview_Success() {
+//    // Data Dummy
+//    val dummyStory = Story(
+//        id = "1",
+//        name = "John Doe",
+//        description = "Ini adalah deskripsi cerita yang sangat menarik tentang perjalanan ke pegunungan.",
+//        photoUrl = "https://example.com/photo.jpg",
+//        createdAt = "2023-10-27T10:00:00Z",
+//        lat = -6.2F,
+//        lon = 106.8F
+//    )
+//
+//    MaterialTheme {
+//        StoryDetailContent(
+//            story = dummyStory,
+//            locationName = "Jakarta, Indonesia",
+//            isLiked = true,
+//            onToggleFavorite = {}
+//        )
+//    }
+//}

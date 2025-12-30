@@ -283,7 +283,7 @@ fun AddStoryTopAppBar(
             TextButton(
                 onClick = onSaveClick,
                 colors = ButtonDefaults.textButtonColors(
-                    contentColor = MaterialTheme.colorScheme.primary
+                    contentColor = Color.White
                 ),
             ) {
                 Text(

@@ -18,4 +18,11 @@ data class StoryState(
     val mapState: ViewState<List<Story>> = ViewState.Idle,
     val storyState: ViewState<StoryUi> = ViewState.Idle,
     val addStoryState: ViewState<AddStoryResponse> = ViewState.Idle,
+    val latestStory: Story? = null,
+    val imagePreview: ImagePreviewState = ImagePreviewState()
+)
+
+data class ImagePreviewState(
+    val imageUrl: String? = null,
+    val isVisible: Boolean = false
 )

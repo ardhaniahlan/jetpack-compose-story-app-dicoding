@@ -40,8 +40,6 @@ fun HomeScreen(
     val lazyListState = rememberLazyListState()
 
     LaunchedEffect(Unit) {
-        stories.refresh()
-
         storyViewModel.eventFlow.collect { story ->
             when(story){
                 is UiEvent.NavigateStoryDetail -> {
@@ -50,6 +48,10 @@ fun HomeScreen(
                 else -> Unit
             }
         }
+    }
+
+    LaunchedEffect(Unit) {
+        stories.refresh()
     }
 
     LaunchedEffect(stories.itemCount) {

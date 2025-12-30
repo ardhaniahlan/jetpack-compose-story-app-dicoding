@@ -31,6 +31,7 @@ interface StoryRepository {
     ): Result<AddStoryResponse>
     suspend fun getStoryDetail(id: String): Result<Story>
     suspend fun getStoriesWithLocation(page: Int = 1, size: Int = 10,): Result<List<Story>>
+    suspend fun getStoriesForNotification(): Result<List<Story>>
 }
 
 class StoryRepositoryImpl(
@@ -60,6 +61,19 @@ class StoryRepositoryImpl(
             size = size,
             location = 1
         ).listStory
+    }
+
+    override suspend fun getStoriesForNotification(): Result<List<Story>> {
+        return try {
+            val response = api.getAllStories(
+                page = 1,
+                size = 10,
+                location = null
+            )
+            Result.success(response.listStory)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
     }
 
     override suspend fun getStoryDetail(id: String): Result<Story> {

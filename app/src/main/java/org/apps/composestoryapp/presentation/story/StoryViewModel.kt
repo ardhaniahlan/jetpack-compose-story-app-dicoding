@@ -9,6 +9,7 @@ import androidx.paging.cachedIn
 import androidx.paging.map
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -16,14 +17,18 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import org.apps.composestoryapp.UiEvent
 import org.apps.composestoryapp.ViewState
+import org.apps.composestoryapp.helper.PreferencesManager
+import org.apps.composestoryapp.helper.StoryNotification
 import org.apps.composestoryapp.model.Story
 import org.apps.composestoryapp.model.StoryUi
+import org.apps.composestoryapp.presentation.home.ImagePreviewState
 import org.apps.composestoryapp.presentation.home.StoryState
 import org.apps.composestoryapp.repository.StoryRepository
 import org.apps.composestoryapp.reverseGeocode
@@ -35,6 +40,8 @@ import javax.inject.Inject
 class StoryViewModel @Inject constructor(
     private val repository: StoryRepository,
     private val favoriteRepo: StoryFavoriteRepository,
+    private val storyNotification: StoryNotification,
+    private val preferencesManager: PreferencesManager,
     @ApplicationContext private val context: Context
 ) : ViewModel() {
 
@@ -70,6 +77,8 @@ class StoryViewModel @Inject constructor(
 
     private val locationCache = mutableMapOf<String, String>()
 
+    private val _lastStoryId = MutableStateFlow<String?>(null)
+
     val stories: Flow<PagingData<StoryUi>> =
         repository.getAllStories()
             .map { pagingData ->
@@ -78,6 +87,41 @@ class StoryViewModel @Inject constructor(
                 }
             }
             .cachedIn(viewModelScope)
+
+    private var pollingJob: Job? = null
+    init {
+        startNotificationPolling()
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        pollingJob?.cancel()
+    }
+
+    private fun startNotificationPolling(){
+        pollingJob = viewModelScope.launch {
+            while (true) {
+                try {
+                    val result = repository.getStoriesForNotification()
+                    result.onSuccess { stories ->
+                        stories.firstOrNull()?.let { latestStory ->
+
+                            val lastNotifiedId = preferencesManager.getLastNotifiedStoryId()
+
+                            if (lastNotifiedId == null || latestStory.id != lastNotifiedId) {
+                                _uiState.update { it.copy(latestStory = latestStory) }
+                                storyNotification.showStoryNotification(latestStory)
+                                preferencesManager.setLastNotifiedStoryId(latestStory.id)
+                            }
+                        }
+                    }
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                }
+                kotlinx.coroutines.delay(30_000)
+            }
+        }
+    }
 
     fun addStory() {
         if (_uiState.value.description.isEmpty()){
@@ -180,7 +224,16 @@ class StoryViewModel @Inject constructor(
         lon: Double?,
         onLocationResolved: (String) -> Unit
     ) {
-        if (lat == null || lon == null) return
+        if (lat == null || lon == null) {
+            onLocationResolved("Lokasi tidak tersedia")
+            return
+        }
+
+        if (lat < -90 || lat > 90 || lon < -180 || lon > 180) {
+            onLocationResolved("Lokasi tidak valid")
+            return
+        }
+
         val key = "$lat,$lon"
 
         locationCache[key]?.let { cached ->
@@ -223,23 +276,6 @@ class StoryViewModel @Inject constructor(
         }
     }
 
-    private fun updateStoryLocation(storyId: String, location: String?) {
-        val current =
-            (_uiState.value.storyListState as? ViewState.Success)?.data ?: return
-
-        _uiState.update {
-            it.copy(
-                storyListState = ViewState.Success(
-                    current.map { ui ->
-                        if (ui.story.id == storyId)
-                            ui.copy(locationName = location)
-                        else ui
-                    }
-                )
-            )
-        }
-    }
-
     fun onDescriptionChange(description: String) {
         _uiState.update { it.copy(description = description) }
     }
@@ -250,5 +286,24 @@ class StoryViewModel @Inject constructor(
 
     fun clearForm() {
         _uiState.update { it.copy(description = "", photoFile = null) }
+    }
+
+    fun showImagePreview(imageUrl: String) {
+        _uiState.update {
+            it.copy(
+                imagePreview = ImagePreviewState(
+                    imageUrl = imageUrl,
+                    isVisible = true
+                )
+            )
+        }
+    }
+
+    fun hideImagePreview() {
+        _uiState.update {
+            it.copy(
+                imagePreview = ImagePreviewState(isVisible = false)
+            )
+        }
     }
 }
